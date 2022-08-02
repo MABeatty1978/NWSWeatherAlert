@@ -7,18 +7,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-#CLE
-weatherStation="OHC093"
 msg = "No Warnings"
-URL="https://api.weather.gov/alerts/active?zone={}".format(weatherStation)
+URL="https://api.weather.gov/alerts/active?point=37.4019,-122.0476"
 aFile = "activeAlerts.dat"
 header = {
-        'User-Agent': 'LorainCountyWeatherBot',
-        'From': 'mabeatty1978@gmail.com'
+        'User-Agent': 'This is my test alert',
+        'From': 'myname@email.com'
     }
 
-wcAlertOffURL = #your webcore piston url to turn the alert off 
-wcAlertOnURL = #your webcore piston url to turn the alert on 
+#wcAlertOffURL = #your webcore piston url to turn the alert off 
+#wcAlertOnURL = #your webcore piston url to turn the alert on 
 
 #Read the current active alerts, if none, instatiate Alerts
 if os.path.isfile(aFile):
