@@ -10,22 +10,19 @@ from logging import Formatter
 
 load_dotenv()
 logger = logging.getLogger(__name__)
-handler = TimedRotatingFileHandler(filename='log/alerthandler.log', when='midnight', interval=1, backupCount=10, encoding='utf-8', delay=False)
+handler = TimedRotatingFileHandler(filename='/home/mab/Development/NWSWeatherAlert/log/alerthandler.log', when='midnight', interval=1, backupCount=10, encoding='utf-8', delay=False)
 formatter = Formatter(fmt='%(asctime)s - %(levelname)s = %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 msg = "No Warnings"
-URL="https://api.weather.gov/alerts/active?point=37.4019,-122.0476"
+URL="https://api.weather.gov/alerts/active?point=" + os.getenv('LATLON')
 aFile = "activeAlerts.dat"
 header = {
         'User-Agent': 'Michael Beatty home automation alert',
         'From': 'mabeatty1978@gmail.com'
     }
-
-ALERTOFFURL = 'https://trigger.sharptools.io/rule/dolOsSYbMI1oYePTJ77a/key/3895e49e-a731-47fe-bb11-a32c1c0b2c34'
-ALERTONURL = 'https://trigger.sharptools.io/rule/8ETVMYDMYPXCxZk8IXAd/key/b882e524-24e1-42ea-95fd-bb2f4739f53f'
 
 #Read the current active alerts, if none, instatiate Alerts
 if os.path.isfile(aFile):
@@ -36,15 +33,19 @@ else:
 
 #Get the json from NWS
 logger.info('Getting current alerts')
-r = requests.get(URL, headers=header)
-r_data = r.json()
-
+try:
+    r = requests.get(URL, headers=header, timeout=10)
+    r_data = r.json()
+except requests.exceptions.Timeout:
+    logger.warn('Timed out waiting for requests')
+    quit()
+logger.info('Alerts: ' + str(r_data))
 if not r_data['features']:
     #There are no active alerts, delete active alert file
     logger.info('No active alerts')
     if os.path.isfile(aFile):
         os.remove(aFile)
-        requests.post(wcAlertOffURL)
+        requests.post(os.getenv('ALERTOFFURL'))
     exit()
 
 for i, alert in enumerate(r_data['features']):
@@ -58,7 +59,7 @@ for i, alert in enumerate(r_data['features']):
     #We only want to send new alerts
     if not alertId in Alerts:
         logger.info("New active alert.  Turning on alert")
-        requests.post(wcAlertOnURL)
+        requests.post(os.getenv('ALERTONURL'))
         msg = headline + "\n\n" + description + "\n\n" + instruction
         a = open(aFile,"a")
         a.write(alertId + "\n")
