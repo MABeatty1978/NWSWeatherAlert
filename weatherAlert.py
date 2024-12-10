@@ -40,12 +40,13 @@ except requests.exceptions.Timeout:
     logger.warn('Timed out waiting for requests')
     quit()
 logger.info('Alerts: ' + str(r_data))
+
 if not r_data['features']:
     #There are no active alerts, delete active alert file
     logger.info('No active alerts')
+    requests.post(os.getenv('ALERTOFFURL'))
     if os.path.isfile(aFile):
         os.remove(aFile)
-        requests.post(os.getenv('ALERTOFFURL'))
     exit()
 
 for i, alert in enumerate(r_data['features']):
